@@ -8,31 +8,18 @@ import PeerId from "peer-id";
 import Gossipsub from "libp2p-gossipsub";
 import Bootstrap from "libp2p-bootstrap";
 import fs from "fs";
-import pipe from "it-pipe";
-import lp from "it-length-prefixed";
-import { Readable } from "stream";
 
-const handleStream = async (stream: any, reader: Readable) => {
-  pipe(reader, lp.encode(), stream.sink);
-  pipe(stream.source, lp.decode(), async function (source: any) {
-    for await (const msg of source) {
-      // Output the data as a utf8 string
-      console.log("x " + msg.toString("utf8").replace("\n", ""));
-    }
-  });
-};
+export async function createPeerId(filename: string) {
+  const id = ((await PeerId.create({
+    bits: 2048,
+    keyType: "rsa",
+  } as any)) as unknown) as PeerId;
+  fs.writeFileSync(filename, JSON.stringify(id.toJSON()));
+}
 
-export const createNodeFromFile = async (filename: string, port?: number) => {
+export const createNode = async (filename: string, port?: number) => {
   const content = fs.readFileSync(filename).toString();
-  const id = await PeerId.createFromJSON(JSON.parse(content));
-  return createNode(false, id, port);
-};
-
-export const createNode = async (
-  bootstrap: boolean,
-  peerId?: any,
-  port?: number
-) => {
+  const peerId = await PeerId.createFromJSON(JSON.parse(content));
   //@ts-ignore
   const cfg: any = {
     peerId,
@@ -45,8 +32,21 @@ export const createNode = async (
       connEncryption: [NOISE, SECIO],
       dht: KadDHT,
       pubsub: Gossipsub,
+      peerDiscovery: [Bootstrap],
     },
     config: {
+      peerDiscovery: {
+        bootstrap: {
+          interval: 10e3,
+          enabled: true,
+          list: [
+            "/dns4/comm-a/tcp/6000/p2p/QmaMEafwe3Nc62va1WVwfn5MZ8rrcmPJbvf314ZsE1rVFd",
+            "/dns4/comm-b/tcp/6000/p2p/QmXb4CTfb3aN3VVraZD6sZ6LGot8FFSEyd5NkP3fpQfseD",
+            "/dns4/comm-c/tcp/6000/p2p/QmP1DFWDc2jWizJTkJEbytYwfPWYyBviusQgjmT3xmoN5z",
+            "/dns4/comm-d/tcp/6000/p2p/QmeMRQdzXNmLtE5ZLeq8bELbpknRZXLDKwJaweFbobEEWr",
+          ],
+        },
+      },
       dht: {
         enabled: true,
         randomWalk: {
@@ -57,51 +57,21 @@ export const createNode = async (
       },
     },
   };
-  if (bootstrap) {
-    cfg.modules.peerDiscovery = [Bootstrap];
-    cfg.config.peerDiscovery = {
-      bootstrap: {
-        interval: 10e3,
-        enabled: true,
-        list: [
-          "/ip4/127.0.0.1/tcp/6001/p2p/QmQ1rBEjFckGvbLHFqNBcNt4xbbXjp62bCfo7D3hif3qTU",
-        ],
-      },
-    };
-  }
-  const node = await (Libp2p as any).create(cfg);
 
+  const node = await (Libp2p as any).create(cfg);
   await node.start();
-  node.handle("greetings/1.0.0", async ({ stream }: { stream: any }) => {
-    console.log("handle called");
-    const reader = new Readable();
-    reader._read = () => {};
-    handleStream(stream, reader);
-    setInterval(() => {
-      reader.push(`hehe from handler`);
-    }, 2000);
-  });
+
   node.connectionManager.on("peer:connect", async (connection: any) => {
     console.log(
       "CONNECT Connection established to:",
       connection.remotePeer.toB58String()
     );
-    const { stream } = await connection.newStream(["greetings/1.0.0"]);
-    const reader = new Readable();
-    reader._read = () => {};
-    handleStream(stream, reader);
-    setInterval(() => {
-      reader.push(`hehe from con`);
-    }, 2000);
   });
   node.connectionManager.on("peer:disconnect", (connection: any) => {
     console.log(
       "DISCONNECT Connection closed to:",
       connection.remotePeer.toB58String()
     );
-  });
-  node.connectionManager.on("peer:discovery", (connection: any) => {
-    console.log("DISCOVERY found peer:", connection.remotePeer.toB58String());
   });
   console.log(
     `Created node with id ${node.peerId.toB58String()} and addrs ${node.multiaddrs.join(

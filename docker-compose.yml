@@ -1,0 +1,41 @@
+version: "3"
+services:
+  comm-a:
+    image: comm
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    expose:
+      - "6000"
+    environment:
+      - FILEADD=A
+      - PORT=6000
+    command: yarn start
+  comm-b:
+    image: comm
+    restart: unless-stopped
+    expose:
+      - "6000"
+    environment:
+      - FILEADD=B
+      - PORT=6000
+    command: yarn start
+  comm-c:
+    image: comm
+    restart: unless-stopped
+    expose:
+      - "6000"
+    environment:
+      - FILEADD=C
+      - PORT=6000
+    command: yarn start
+  comm-d:
+    image: comm
+    restart: unless-stopped
+    expose:
+      - "6000"
+    environment:
+      - FILEADD=D
+      - PORT=6000
+    command: yarn start
