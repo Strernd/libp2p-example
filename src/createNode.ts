@@ -8,6 +8,19 @@ import PeerId from "peer-id";
 import Gossipsub from "libp2p-gossipsub";
 import Bootstrap from "libp2p-bootstrap";
 import fs from "fs";
+import pipe from "it-pipe";
+import lp from "it-length-prefixed";
+import { Readable } from "stream";
+
+const handleStream = async (stream: any, reader: Readable) => {
+  pipe(reader, lp.encode(), stream.sink);
+  pipe(stream.source, lp.decode(), async function (source: any) {
+    for await (const msg of source) {
+      // Output the data as a utf8 string
+      console.log("x " + msg.toString("utf8").replace("\n", ""));
+    }
+  });
+};
 
 export const createNodeFromFile = async (filename: string, port?: number) => {
   const content = fs.readFileSync(filename).toString();
@@ -48,7 +61,7 @@ export const createNode = async (
     cfg.modules.peerDiscovery = [Bootstrap];
     cfg.config.peerDiscovery = {
       bootstrap: {
-        interval: 60e3,
+        interval: 10e3,
         enabled: true,
         list: [
           "/ip4/127.0.0.1/tcp/6001/p2p/QmQ1rBEjFckGvbLHFqNBcNt4xbbXjp62bCfo7D3hif3qTU",
@@ -59,11 +72,27 @@ export const createNode = async (
   const node = await (Libp2p as any).create(cfg);
 
   await node.start();
-  node.connectionManager.on("peer:connect", (connection: any) => {
+  node.handle("greetings/1.0.0", async ({ stream }: { stream: any }) => {
+    console.log("handle called");
+    const reader = new Readable();
+    reader._read = () => {};
+    handleStream(stream, reader);
+    setInterval(() => {
+      reader.push(`hehe from handler`);
+    }, 2000);
+  });
+  node.connectionManager.on("peer:connect", async (connection: any) => {
     console.log(
       "CONNECT Connection established to:",
       connection.remotePeer.toB58String()
     );
+    const { stream } = await connection.newStream(["greetings/1.0.0"]);
+    const reader = new Readable();
+    reader._read = () => {};
+    handleStream(stream, reader);
+    setInterval(() => {
+      reader.push(`hehe from con`);
+    }, 2000);
   });
   node.connectionManager.on("peer:disconnect", (connection: any) => {
     console.log(

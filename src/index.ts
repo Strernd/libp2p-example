@@ -1,4 +1,3 @@
-// import delay from "delay";
 import { createNode, createNodeFromFile } from "./createNode";
 
 const topic = "gossip";
@@ -10,7 +9,7 @@ const topic = "gossip";
     node = await createNode(true);
   }
 
-  await node.pubsub.subscribe("consensus", (msg: any) => {
+  await node.pubsub.subscribe(topic, (msg: any) => {
     console.log(`Received: ${msg.data.toString()}`);
   });
 

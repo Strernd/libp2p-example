@@ -24,7 +24,7 @@
     "typeRoots" : ["./node_modules/@types", "./node_modules/@polkadot/ts", "./typings"]
   },
   "include": [
-    "src/**/*", "types.d.ts", "legacy"
+    "src/**/*", "types.d.ts", "legacy", "typings/types.d.ts"
   ],
   "exclude": [
     "node_modules",
