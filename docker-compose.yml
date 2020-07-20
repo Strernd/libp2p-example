@@ -6,6 +6,8 @@ services:
       context: ./
       dockerfile: Dockerfile
     restart: unless-stopped
+    ports:
+      - "6001:6000"
     expose:
       - "6000"
     environment:
@@ -17,6 +19,8 @@ services:
     restart: unless-stopped
     expose:
       - "6000"
+    ports:
+      - "6002:6000"
     environment:
       - FILEADD=B
       - PORT=6000
@@ -24,6 +28,8 @@ services:
   comm-c:
     image: comm
     restart: unless-stopped
+    ports:
+      - "6003:6000"
     expose:
       - "6000"
     environment:
@@ -33,6 +39,8 @@ services:
   comm-d:
     image: comm
     restart: unless-stopped
+    ports:
+      - "6004:6000"
     expose:
       - "6000"
     environment:

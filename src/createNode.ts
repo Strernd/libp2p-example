@@ -45,6 +45,12 @@ export const createNode = async (filename: string, port?: number) => {
             "/dns4/comm-c/tcp/6000/p2p/QmP1DFWDc2jWizJTkJEbytYwfPWYyBviusQgjmT3xmoN5z",
             "/dns4/comm-d/tcp/6000/p2p/QmeMRQdzXNmLtE5ZLeq8bELbpknRZXLDKwJaweFbobEEWr",
           ],
+          // list: [
+          //   "/ip4/127.0.0.1/tcp/6001/p2p/QmaMEafwe3Nc62va1WVwfn5MZ8rrcmPJbvf314ZsE1rVFd",
+          //   "/ip4/127.0.0.1/tcp/6002/p2p/QmXb4CTfb3aN3VVraZD6sZ6LGot8FFSEyd5NkP3fpQfseD",
+          //   "/ip4/127.0.0.1/tcp/6003/p2p/QmP1DFWDc2jWizJTkJEbytYwfPWYyBviusQgjmT3xmoN5z",
+          //   "/ip4/127.0.0.1/tcp/6004/p2p/QmeMRQdzXNmLtE5ZLeq8bELbpknRZXLDKwJaweFbobEEWr",
+          // ],
         },
       },
       dht: {
